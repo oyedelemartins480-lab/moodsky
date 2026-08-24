@@ -4,16 +4,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, ArrowRight, Clock3, MapPin, Search, Wind } from 'lucide-react'
 
 type WeatherKind = 'sunny' | 'rainy' | 'cloudy' | 'storm' | 'cold'
-type Day = { day: string; date: string; kind: WeatherKind; high: number; low: number }
+type Day = { day: string; date: string; kind: WeatherKind; high: number; low: number; sunsetHour: number; sunsetMinute: number }
 
 const days: Day[] = [
-  { day: 'Today', date: '24', kind: 'sunny', high: 29, low: 24 },
-  { day: 'Tue', date: '25', kind: 'rainy', high: 27, low: 23 },
-  { day: 'Wed', date: '26', kind: 'cloudy', high: 28, low: 23 },
-  { day: 'Thu', date: '27', kind: 'sunny', high: 30, low: 24 },
-  { day: 'Fri', date: '28', kind: 'storm', high: 26, low: 22 },
-  { day: 'Sat', date: '29', kind: 'sunny', high: 30, low: 24 },
-  { day: 'Sun', date: '30', kind: 'cloudy', high: 28, low: 23 },
+  { day: 'Today', date: '24', kind: 'sunny', high: 29, low: 24, sunsetHour: 18, sunsetMinute: 42 },
+  { day: 'Tue', date: '25', kind: 'rainy', high: 27, low: 23, sunsetHour: 18, sunsetMinute: 42 },
+  { day: 'Wed', date: '26', kind: 'cloudy', high: 28, low: 23, sunsetHour: 18, sunsetMinute: 43 },
+  { day: 'Thu', date: '27', kind: 'sunny', high: 30, low: 24, sunsetHour: 18, sunsetMinute: 43 },
+  { day: 'Fri', date: '28', kind: 'storm', high: 26, low: 22, sunsetHour: 18, sunsetMinute: 44 },
+  { day: 'Sat', date: '29', kind: 'sunny', high: 30, low: 24, sunsetHour: 18, sunsetMinute: 44 },
+  { day: 'Sun', date: '30', kind: 'cloudy', high: 28, low: 23, sunsetHour: 18, sunsetMinute: 45 },
 ]
 
 const copy: Record<WeatherKind, { label: string; sentence: string }> = {
@@ -49,6 +49,10 @@ export function MoodSky() {
   }, [])
 
   const timeFormatter = useMemo(() => new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: '2-digit' }), [timezone])
+  const sunsetTime = useMemo(() => {
+    const sunset = new Date(2026, 7, Number(current.date), current.sunsetHour, current.sunsetMinute)
+    return timeFormatter.format(sunset)
+  }, [current.date, current.sunsetHour, current.sunsetMinute, timeFormatter])
   const timezoneLabel = timezone === 'Africa/Lagos' ? 'Lagos · GMT+1' : timezone === 'America/New_York' ? 'New York · ET' : timezone === 'Europe/London' ? 'London · GMT' : 'Tokyo · GMT+9'
   const details = copy[current.kind]
   const formattedDate = useMemo(() => new Intl.DateTimeFormat('en', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date(2026, 7, Number(current.date))), [current.date])
@@ -69,11 +73,11 @@ export function MoodSky() {
           <div className="date-label">{formattedDate}</div>
           <div className="hero-cloud"><MoodCloud kind={current.kind} /></div>
           <div className="weather-copy"><p className="eyebrow">Good morning, Lagos</p><h1 id="weather-heading">{current.high}°</h1><p className="condition">{details.label} <span aria-hidden="true">·</span> Feels like {current.high - 1}°</p><p className="sentence">{details.sentence}</p></div>
-          <div className="metrics"><div><Wind size={17} /><span>Wind</span><strong>12 km/h</strong></div><div><span className="humidity-dot" /><span>Humidity</span><strong>78%</strong></div><div><span className="sunset-dot" /><span>Sunset</span><strong>6:42 PM</strong></div></div>
+          <div className="metrics"><div><Wind size={17} /><span>Wind</span><strong>12 km/h</strong></div><div><span className="humidity-dot" /><span>Humidity</span><strong>78%</strong></div><div><span className="sunset-dot" /><span>Sunset</span><strong>{sunsetTime}</strong></div></div>
         </section>
 
         <section className="forecast-section" aria-labelledby="forecast-heading"><div className="section-heading"><div><p className="eyebrow">The week ahead</p><h2 id="forecast-heading">Your sky, at a glance</h2></div><div className="arrows"><button aria-label="Previous day" onClick={() => setSelected(Math.max(0, selected - 1))}><ArrowLeft size={17} /></button><button aria-label="Next day" onClick={() => setSelected(Math.min(days.length - 1, selected + 1))}><ArrowRight size={17} /></button></div></div><div className="forecast-strip">{days.map((day, index) => <button key={day.date} className={`day-card ${index === selected ? 'day-card--selected' : ''}`} onClick={() => setSelected(index)} aria-pressed={index === selected}><span className="day-name">{day.day}</span><span className="day-date">{day.date}</span><MoodCloud kind={day.kind} small /><span className="temps"><b>{day.high}°</b><span>{day.low}°</span></span></button>)}</div></section>
-        <footer><span>Made for people who check the weather before checking their mood.</span><span className="footer-note">{timezoneLabel}</span></footer>
+        <footer><span>© Built by Mars</span><span className="footer-note">{timezoneLabel}</span></footer>
       </div>
     </main>
   )
