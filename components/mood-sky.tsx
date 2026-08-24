@@ -27,10 +27,10 @@ const copy: Record<WeatherKind, { label: string; sentence: string }> = {
 function MoodCloud({ kind, small = false }: { kind: WeatherKind; small?: boolean }) {
   return (
     <div className={`mood-cloud mood-cloud--${kind} ${small ? 'mood-cloud--small' : ''}`} role="img" aria-label={`${copy[kind].label} cloud character`}>
-      {kind === 'sunny' && <span className="sunglasses">— —</span>}
+      {kind === 'sunny' && <span className="sunglasses" aria-hidden="true"><i /><i /><b /></span>}
       {kind === 'rainy' && <span className="umbrella">⌒</span>}
-      <div className="cloud-shape"><span className="eye eye-left" /><span className="eye eye-right" /><span className="mouth" /></div>
-      {kind === 'sunny' && <span className="sun-ray">✦</span>}
+      <div className="cloud-shape"><span className="eye eye-left"><i /></span><span className="eye eye-right"><i /></span><span className="cheek cheek-left" /><span className="cheek cheek-right" /><span className="mouth" /></div>
+      {kind === 'sunny' && <span className="sun-rays" aria-hidden="true"><i>✦</i><i>✦</i><i>✦</i></span>}
       {kind === 'rainy' && <span className="rain-drops">· · ·</span>}
     </div>
   )
