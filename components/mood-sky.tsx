@@ -40,10 +40,11 @@ export function MoodSky() {
   const [selected, setSelected] = useState(0)
   const [query, setQuery] = useState('Lagos, Nigeria')
   const [timezone, setTimezone] = useState('Africa/Lagos')
-  const [now, setNow] = useState(() => new Date())
+  const [now, setNow] = useState<Date | null>(null)
   const current = days[selected]
 
   useEffect(() => {
+    setNow(new Date())
     const timer = window.setInterval(() => setNow(new Date()), 30_000)
     return () => window.clearInterval(timer)
   }, [])
@@ -63,7 +64,7 @@ export function MoodSky() {
         <header className="topbar">
           <div className="brand"><span className="brand-mark">M</span><span>MoodSky</span></div>
           <div className="location"><MapPin size={15} strokeWidth={2.5} /><span>{query || 'Lagos, Nigeria'}</span></div>
-          <div className="local-time"><Clock3 size={14} aria-hidden="true" /><time dateTime={now.toISOString()}>{timeFormatter.format(now)}</time><label className="sr-only" htmlFor="timezone">Choose timezone</label><select id="timezone" value={timezone} onChange={(event) => setTimezone(event.target.value)}><option value="Africa/Lagos">Lagos (GMT+1)</option><option value="America/New_York">New York (ET)</option><option value="Europe/London">London (GMT)</option><option value="Asia/Tokyo">Tokyo (GMT+9)</option></select></div>
+          <div className="local-time"><Clock3 size={14} aria-hidden="true" /><time dateTime={now?.toISOString()}>{now ? timeFormatter.format(now) : '—:—'}</time><label className="sr-only" htmlFor="timezone">Choose timezone</label><select id="timezone" value={timezone} onChange={(event) => setTimezone(event.target.value)}><option value="Africa/Lagos">Lagos (GMT+1)</option><option value="America/New_York">New York (ET)</option><option value="Europe/London">London (GMT)</option><option value="Asia/Tokyo">Tokyo (GMT+9)</option></select></div>
           <form className="search-box" onSubmit={(event) => event.preventDefault()}>
             <Search size={16} aria-hidden="true" /><label className="sr-only" htmlFor="city">Search city</label><input id="city" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search a city" /><button type="submit" aria-label="Search"><ArrowRight size={16} /></button>
           </form>
