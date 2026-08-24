@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { ArrowLeft, ArrowRight, MapPin, Search, Wind } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, ArrowRight, Clock3, MapPin, Search, Wind } from 'lucide-react'
 
 type WeatherKind = 'sunny' | 'rainy' | 'cloudy' | 'storm' | 'cold'
 type Day = { day: string; date: string; kind: WeatherKind; high: number; low: number }
@@ -39,7 +39,17 @@ function MoodCloud({ kind, small = false }: { kind: WeatherKind; small?: boolean
 export function MoodSky() {
   const [selected, setSelected] = useState(0)
   const [query, setQuery] = useState('Lagos, Nigeria')
+  const [timezone, setTimezone] = useState('Africa/Lagos')
+  const [now, setNow] = useState(() => new Date())
   const current = days[selected]
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 30_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const timeFormatter = useMemo(() => new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: '2-digit' }), [timezone])
+  const timezoneLabel = timezone === 'Africa/Lagos' ? 'Lagos · GMT+1' : timezone === 'America/New_York' ? 'New York · ET' : timezone === 'Europe/London' ? 'London · GMT' : 'Tokyo · GMT+9'
   const details = copy[current.kind]
   const formattedDate = useMemo(() => new Intl.DateTimeFormat('en', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date(2026, 7, Number(current.date))), [current.date])
 
@@ -49,6 +59,7 @@ export function MoodSky() {
         <header className="topbar">
           <div className="brand"><span className="brand-mark">M</span><span>MoodSky</span></div>
           <div className="location"><MapPin size={15} strokeWidth={2.5} /><span>{query || 'Lagos, Nigeria'}</span></div>
+          <div className="local-time"><Clock3 size={14} aria-hidden="true" /><time dateTime={now.toISOString()}>{timeFormatter.format(now)}</time><label className="sr-only" htmlFor="timezone">Choose timezone</label><select id="timezone" value={timezone} onChange={(event) => setTimezone(event.target.value)}><option value="Africa/Lagos">Lagos (GMT+1)</option><option value="America/New_York">New York (ET)</option><option value="Europe/London">London (GMT)</option><option value="Asia/Tokyo">Tokyo (GMT+9)</option></select></div>
           <form className="search-box" onSubmit={(event) => event.preventDefault()}>
             <Search size={16} aria-hidden="true" /><label className="sr-only" htmlFor="city">Search city</label><input id="city" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search a city" /><button type="submit" aria-label="Search"><ArrowRight size={16} /></button>
           </form>
@@ -62,7 +73,7 @@ export function MoodSky() {
         </section>
 
         <section className="forecast-section" aria-labelledby="forecast-heading"><div className="section-heading"><div><p className="eyebrow">The week ahead</p><h2 id="forecast-heading">Your sky, at a glance</h2></div><div className="arrows"><button aria-label="Previous day" onClick={() => setSelected(Math.max(0, selected - 1))}><ArrowLeft size={17} /></button><button aria-label="Next day" onClick={() => setSelected(Math.min(days.length - 1, selected + 1))}><ArrowRight size={17} /></button></div></div><div className="forecast-strip">{days.map((day, index) => <button key={day.date} className={`day-card ${index === selected ? 'day-card--selected' : ''}`} onClick={() => setSelected(index)} aria-pressed={index === selected}><span className="day-name">{day.day}</span><span className="day-date">{day.date}</span><MoodCloud kind={day.kind} small /><span className="temps"><b>{day.high}°</b><span>{day.low}°</span></span></button>)}</div></section>
-        <footer><span>Made for people who check the weather before checking their mood.</span><span className="footer-note">Lagos · GMT+1</span></footer>
+        <footer><span>Made for people who check the weather before checking their mood.</span><span className="footer-note">{timezoneLabel}</span></footer>
       </div>
     </main>
   )
