@@ -114,7 +114,6 @@ export function MoodSky() {
   const fallbackSunsetIso = `2026-08-${current.date.padStart(2, '0')}T${String(current.sunsetHour).padStart(2, '0')}:${String(current.sunsetMinute).padStart(2, '0')}:00+01:00`
   const sunsetDate = locationWeather ? new Date(locationWeather.sunset) : new Date(fallbackSunsetIso)
   const sunsetTime = useMemo(() => timeFormatter.format(sunsetDate), [sunsetDate, timeFormatter])
-  const timezoneLabel = locationWeather ? `${locationWeather.name} · ${locationWeather.timezone}` : timezone === 'Africa/Lagos' ? 'Lagos · GMT+1' : timezone === 'America/New_York' ? 'New York · ET' : timezone === 'Europe/London' ? 'London · GMT' : 'Tokyo · GMT+9'
   const details = copy[locationWeather?.kind ?? current.kind]
   const displayedName = locationWeather ? `${locationWeather.name}${locationWeather.country ? `, ${locationWeather.country}` : ''}` : query || 'Lagos, Nigeria'
   const displayedKind = locationWeather?.kind ?? current.kind
@@ -145,7 +144,7 @@ export function MoodSky() {
         </section>
 
         <section className="forecast-section" aria-labelledby="forecast-heading"><div className="section-heading"><div><p className="eyebrow">The week ahead</p><h2 id="forecast-heading">Your sky, at a glance</h2></div><label className="calendar-control"><CalendarDays size={16} aria-hidden="true" /><span>Browse dates</span><input type="date" value={calendarDate} min="2026-08-18" max="2026-09-01" onChange={(event) => changeCalendarDate(event.target.value)} aria-label="Browse weather by date" /></label><div className="arrows"><button aria-label="Previous day" onClick={() => setSelected(Math.max(0, selected - 1))}><ArrowLeft size={17} /></button><button aria-label="Next day" onClick={() => setSelected(Math.min(days.length - 1, selected + 1))}><ArrowRight size={17} /></button></div></div><div className="forecast-strip">{days.map((day, index) => <button key={day.date} className={`day-card ${index === selected ? 'day-card--selected' : ''}`} onClick={() => setSelected(index)} aria-pressed={index === selected}><span className="day-name">{day.day}</span><span className="day-date">{day.date}</span><MoodCloud kind={day.kind} small /><span className="temps"><b>{day.high}°</b><span>{day.low}°</span></span></button>)}</div></section>
-        <footer><span>© Built by Mars</span><span className="footer-note">{timezoneLabel}</span></footer>
+        <footer><span>© Built by Mars</span></footer>
       </div>
     </main>
   )
