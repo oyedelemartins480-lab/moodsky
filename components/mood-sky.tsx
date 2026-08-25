@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, ArrowRight, Clock3, MapPin, Search, Wind } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CalendarDays, Clock3, MapPin, Search, Wind } from 'lucide-react'
 
 type WeatherKind = 'sunny' | 'rainy' | 'cloudy' | 'storm' | 'cold'
 type Day = { day: string; date: string; kind: WeatherKind; high: number; low: number; sunsetHour: number; sunsetMinute: number }
-type LocationWeather = { name: string; country?: string; timezone: string; temperature: number; feelsLike: number; humidity: number; wind: number; sunset: string; kind: WeatherKind }
+type LocationWeather = { name: string; country?: string; timezone: string; temperature: number; feelsLike: number; humidity: number; wind: number; sunset: string; kind: WeatherKind; latitude?: number; longitude?: number }
 
 const days: Day[] = [
   { day: 'Today', date: '24', kind: 'sunny', high: 29, low: 24, sunsetHour: 18, sunsetMinute: 42 },
@@ -28,8 +28,6 @@ const copy: Record<WeatherKind, { label: string; sentence: string }> = {
 function MoodCloud({ kind, small = false }: { kind: WeatherKind; small?: boolean }) {
   return (
     <div className={`mood-cloud mood-cloud--${kind} ${small ? 'mood-cloud--small' : ''}`} role="img" aria-label={`${copy[kind].label} cloud character`}>
-      {kind === 'sunny' && <span className="sunglasses" aria-hidden="true"><i /><i /><b /></span>}
-      {kind === 'rainy' && <span className="umbrella">⌒</span>}
       <div className="cloud-shape"><span className="eye eye-left"><i /></span><span className="eye eye-right"><i /></span><span className="cheek cheek-left" /><span className="cheek cheek-right" /><span className="mouth" /></div>
       {kind === 'sunny' && <span className="sun-rays" aria-hidden="true"><i>✦</i><i>✦</i><i>✦</i></span>}
       {kind === 'rainy' && <span className="rain-drops">· · ·</span>}
@@ -45,7 +43,20 @@ export function MoodSky() {
   const [locationWeather, setLocationWeather] = useState<LocationWeather | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState('')
+  const [calendarDate, setCalendarDate] = useState('2026-08-25')
   const current = days[selected]
+
+  async function changeCalendarDate(value: string) {
+    setCalendarDate(value)
+    if (!locationWeather?.latitude || !locationWeather.longitude || value >= '2026-08-25') return
+    try {
+      const response = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${locationWeather.latitude}&longitude=${locationWeather.longitude}&start_date=${value}&end_date=${value}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_mean,relative_humidity_2m_mean,wind_speed_10m_max,sunset&timezone=${encodeURIComponent(locationWeather.timezone)}`)
+      if (!response.ok) return
+      const archive = await response.json()
+      const code = archive.daily?.weather_code?.[0] ?? 0
+      setLocationWeather((previous) => previous ? { ...previous, temperature: Math.round(archive.daily.temperature_2m_max[0]), feelsLike: Math.round(archive.daily.apparent_temperature_mean[0]), humidity: Math.round(archive.daily.relative_humidity_2m_mean[0]), wind: Math.round(archive.daily.wind_speed_10m_max[0]), sunset: archive.daily.sunset[0], kind: code >= 95 ? 'storm' : code >= 51 ? 'rainy' : code >= 1 ? 'cloudy' : 'sunny' } : previous)
+    } catch { /* Keep the last available weather when archive is unavailable. */ }
+  }
 
   async function searchLocation(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -74,6 +85,8 @@ export function MoodSky() {
         wind: Math.round(weather.current.wind_speed_10m),
         sunset: weather.daily.sunset[0],
         kind,
+        latitude: result.latitude,
+        longitude: result.longitude,
       })
       setTimezone(result.timezone)
       setSelected(0)
@@ -122,7 +135,7 @@ export function MoodSky() {
           <div className="metrics"><div><Wind size={17} /><span>Wind</span><strong>{displayedWind} km/h</strong></div><div><span className="humidity-dot" /><span>Humidity</span><strong>{displayedHumidity}%</strong></div><div><span className="sunset-dot" /><span>Sunset</span><strong>{sunsetTime}</strong></div></div>
         </section>
 
-        <section className="forecast-section" aria-labelledby="forecast-heading"><div className="section-heading"><div><p className="eyebrow">The week ahead</p><h2 id="forecast-heading">Your sky, at a glance</h2></div><div className="arrows"><button aria-label="Previous day" onClick={() => setSelected(Math.max(0, selected - 1))}><ArrowLeft size={17} /></button><button aria-label="Next day" onClick={() => setSelected(Math.min(days.length - 1, selected + 1))}><ArrowRight size={17} /></button></div></div><div className="forecast-strip">{days.map((day, index) => <button key={day.date} className={`day-card ${index === selected ? 'day-card--selected' : ''}`} onClick={() => setSelected(index)} aria-pressed={index === selected}><span className="day-name">{day.day}</span><span className="day-date">{day.date}</span><MoodCloud kind={day.kind} small /><span className="temps"><b>{day.high}°</b><span>{day.low}°</span></span></button>)}</div></section>
+        <section className="forecast-section" aria-labelledby="forecast-heading"><div className="section-heading"><div><p className="eyebrow">The week ahead</p><h2 id="forecast-heading">Your sky, at a glance</h2></div><label className="calendar-control"><CalendarDays size={16} aria-hidden="true" /><span>Browse dates</span><input type="date" value={calendarDate} min="2026-08-18" max="2026-09-01" onChange={(event) => changeCalendarDate(event.target.value)} aria-label="Browse weather by date" /></label><div className="arrows"><button aria-label="Previous day" onClick={() => setSelected(Math.max(0, selected - 1))}><ArrowLeft size={17} /></button><button aria-label="Next day" onClick={() => setSelected(Math.min(days.length - 1, selected + 1))}><ArrowRight size={17} /></button></div></div><div className="forecast-strip">{days.map((day, index) => <button key={day.date} className={`day-card ${index === selected ? 'day-card--selected' : ''}`} onClick={() => setSelected(index)} aria-pressed={index === selected}><span className="day-name">{day.day}</span><span className="day-date">{day.date}</span><MoodCloud kind={day.kind} small /><span className="temps"><b>{day.high}°</b><span>{day.low}°</span></span></button>)}</div></section>
         <footer><span>© Built by Mars</span><span className="footer-note">{timezoneLabel}</span></footer>
       </div>
     </main>
