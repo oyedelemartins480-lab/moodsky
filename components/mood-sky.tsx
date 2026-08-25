@@ -104,7 +104,8 @@ export function MoodSky() {
   }, [])
 
   const timeFormatter = useMemo(() => new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: '2-digit' }), [timezone])
-  const sunsetDate = locationWeather ? new Date(locationWeather.sunset) : new Date(2026, 7, Number(current.date), current.sunsetHour, current.sunsetMinute)
+  const fallbackSunsetIso = `2026-08-${current.date.padStart(2, '0')}T${String(current.sunsetHour).padStart(2, '0')}:${String(current.sunsetMinute).padStart(2, '0')}:00+01:00`
+  const sunsetDate = locationWeather ? new Date(locationWeather.sunset) : new Date(fallbackSunsetIso)
   const sunsetTime = useMemo(() => timeFormatter.format(sunsetDate), [sunsetDate, timeFormatter])
   const timezoneLabel = locationWeather ? `${locationWeather.name} · ${locationWeather.timezone}` : timezone === 'Africa/Lagos' ? 'Lagos · GMT+1' : timezone === 'America/New_York' ? 'New York · ET' : timezone === 'Europe/London' ? 'London · GMT' : 'Tokyo · GMT+9'
   const details = copy[locationWeather?.kind ?? current.kind]
