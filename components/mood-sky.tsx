@@ -7,6 +7,8 @@ type WeatherKind = 'sunny' | 'rainy' | 'cloudy' | 'storm' | 'cold'
 type Day = { day: string; date: string; kind: WeatherKind; high: number; low: number; sunsetHour: number; sunsetMinute: number }
 type LocationWeather = { name: string; country?: string; timezone: string; temperature: number; feelsLike: number; humidity: number; wind: number; sunset: string; kind: WeatherKind; latitude?: number; longitude?: number }
 
+const locationSuggestions = ['Lagos, Nigeria', 'New York, United States', 'London, United Kingdom', 'Tokyo, Japan', 'Nairobi, Kenya']
+
 const days: Day[] = [
   { day: 'Today', date: '24', kind: 'sunny', high: 29, low: 24, sunsetHour: 18, sunsetMinute: 42 },
   { day: 'Tue', date: '25', kind: 'rainy', high: 27, low: 23, sunsetHour: 18, sunsetMinute: 42 },
@@ -43,7 +45,12 @@ export function MoodSky() {
   const [locationWeather, setLocationWeather] = useState<LocationWeather | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState('')
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false)
   const [calendarDate, setCalendarDate] = useState('2026-08-25')
+  const suggestions = useMemo(() => {
+    const value = query.trim().toLowerCase()
+    return value ? locationSuggestions.filter((location) => location.toLowerCase().includes(value)).slice(0, 5) : locationSuggestions.slice(0, 5)
+  }, [query])
   const current = days[selected]
 
   async function changeCalendarDate(value: string) {
@@ -125,7 +132,8 @@ export function MoodSky() {
           <div className="location"><MapPin size={15} strokeWidth={2.5} /><span>{displayedName}</span></div>
           <div className="local-time"><Clock3 size={14} aria-hidden="true" /><time dateTime={now?.toISOString()}>{now ? timeFormatter.format(now) : '—:—'}</time><label className="sr-only" htmlFor="timezone">Choose timezone</label><select id="timezone" value={timezone} onChange={(event) => setTimezone(event.target.value)}><option value="Africa/Lagos">Lagos (GMT+1)</option><option value="America/New_York">New York (ET)</option><option value="Europe/London">London (GMT)</option><option value="Asia/Tokyo">Tokyo (GMT+9)</option></select></div>
           <form className="search-box" onSubmit={searchLocation} aria-busy={isSearching}>
-            <Search size={16} aria-hidden="true" /><label className="sr-only" htmlFor="city">Search city</label><input id="city" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search a city" /><button type="submit" aria-label="Search"><ArrowRight size={16} /></button>
+            <Search size={16} aria-hidden="true" /><label className="sr-only" htmlFor="city">Search city</label><input id="city" value={query} onFocus={() => setIsSuggestionsOpen(true)} onChange={(event) => { setQuery(event.target.value); setIsSuggestionsOpen(true) }} onBlur={() => window.setTimeout(() => setIsSuggestionsOpen(false), 150)} placeholder="Search a city" autoComplete="off" role="combobox" aria-expanded={isSuggestionsOpen && suggestions.length > 0} aria-controls="location-suggestions" /><button type="submit" aria-label="Search"><ArrowRight size={16} /></button>
+            {isSuggestionsOpen && suggestions.length > 0 && <ul id="location-suggestions" className="suggestions" role="listbox">{suggestions.map((suggestion) => <li key={suggestion}><button type="button" role="option" onMouseDown={(event) => event.preventDefault()} onClick={() => { setQuery(suggestion); setIsSuggestionsOpen(false) }}>{suggestion}</button></li>)}</ul>}
           </form>
         </header>
 
