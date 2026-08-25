@@ -1,33 +1,62 @@
-# moodsky
+# 🌤️ MoodSky — Weather with a little feeling
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+**Live demo:** [moodsky-bay.vercel.app](https://moodsky-bay.vercel.app/)
 
-## Built with v0
+MoodSky is a colorful, playful weather app with a twist: instead of a generic icon, the weather is shown through a big expressive cloud character whose face and mood change based on the forecast — sunglasses when it's sunny, sleepy eyes when it's cloudy, and more. Swipe through the week ahead on the date strip to see how the cloud's mood shifts day to day.
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+## ✨ Features
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_IFZVTikRzziuwYkc3rVUkpU2cCmZ)
+- **Mood-driven hero cloud** — a large animated cloud character with a face that reflects the current weather condition
+- **Written forecast summaries** — plain-language, friendly descriptions of the day's weather (not just numbers)
+- **7-day forecast strip** — swipeable/scrollable date cards, each with its own mini mood-cloud and high/low temps
+- **City search** — look up weather for any city
+- **Timezone selector** — check conditions across different timezones (Lagos, New York, London, Tokyo)
+- **At-a-glance stats** — wind, humidity, and sunset time
+- **Playful, colorful UI** — pastel-to-vibrant gradients, rounded cards, and soft shadows throughout
 
-## Getting Started
+## 🛠️ Built with
 
-First, run the development server:
+- [Next.js](https://nextjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- Weather data via [OpenWeatherMap API](https://openweathermap.org/api)
+- Deployed on [Vercel](https://vercel.com/)
 
-```bash
+## 🚀 Getting started
+
+Clone the repo and install dependencies:
+
+\`\`\`bash
+git clone <your-repo-url>
+cd moodsky
+npm install
+\`\`\`
+
+Add your API key in a `.env.local` file:
+
+\`\`\`bash
+OPENWEATHERMAP_API_KEY=your_key_here
+\`\`\`
+
+Run the dev server:
+
+\`\`\`bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+\`\`\`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📌 Roadmap
 
-## Learn More
+- [ ] Auto-detect user location on load (browser Geolocation API)
+- [ ] More weather-mood expressions (fog, storms, snow)
+- [ ] Dark mode
+- [ ] Hourly forecast view
 
-To learn more, take a look at the following resources:
+## 🙋 Author
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+Built by Martins.
+
+## 📄 License
+
+MIT
