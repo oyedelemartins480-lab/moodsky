@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, CalendarDays, Clock3, MapPin, Search, Wind } from 'lucide-react'
 
 type WeatherKind = 'sunny' | 'rainy' | 'cloudy' | 'storm' | 'cold'
@@ -47,14 +47,23 @@ export function MoodSky() {
   const [searchError, setSearchError] = useState('')
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false)
   const [calendarDate, setCalendarDate] = useState('2026-08-25')
+  const forecastStripRef = useRef<HTMLDivElement>(null)
   const suggestions = useMemo(() => {
     const value = query.trim().toLowerCase()
     return value ? locationSuggestions.filter((location) => location.toLowerCase().includes(value)).slice(0, 5) : locationSuggestions.slice(0, 5)
   }, [query])
   const current = days[selected]
+  const activeWeather = selected === 0 ? locationWeather : null
+  const displayedKind = activeWeather?.kind ?? current.kind
+  const displayedTemperature = activeWeather?.temperature ?? current.high
+  const displayedFeelsLike = activeWeather?.feelsLike ?? current.high - 1
+  const displayedHumidity = activeWeather?.humidity ?? 78
+  const displayedWind = activeWeather?.wind ?? 12
 
   async function changeCalendarDate(value: string) {
     setCalendarDate(value)
+    const dateIndex = days.findIndex((day) => day.date === value.slice(-2))
+    setSelected(dateIndex >= 0 ? dateIndex : 0)
     if (!locationWeather?.latitude || !locationWeather.longitude || value >= '2026-08-25') return
     try {
       const response = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${locationWeather.latitude}&longitude=${locationWeather.longitude}&start_date=${value}&end_date=${value}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_mean,relative_humidity_2m_mean,wind_speed_10m_max,sunset&timezone=${encodeURIComponent(locationWeather.timezone)}`)
@@ -112,15 +121,11 @@ export function MoodSky() {
 
   const timeFormatter = useMemo(() => new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: '2-digit' }), [timezone])
   const fallbackSunsetIso = `2026-08-${current.date.padStart(2, '0')}T${String(current.sunsetHour).padStart(2, '0')}:${String(current.sunsetMinute).padStart(2, '0')}:00+01:00`
-  const sunsetDate = locationWeather ? new Date(locationWeather.sunset) : new Date(fallbackSunsetIso)
+  const sunsetDate = activeWeather ? new Date(activeWeather.sunset) : new Date(fallbackSunsetIso)
   const sunsetTime = useMemo(() => timeFormatter.format(sunsetDate), [sunsetDate, timeFormatter])
-  const details = copy[locationWeather?.kind ?? current.kind]
+  const details = copy[displayedKind]
   const displayedName = locationWeather ? `${locationWeather.name}${locationWeather.country ? `, ${locationWeather.country}` : ''}` : query || 'Lagos, Nigeria'
-  const displayedKind = locationWeather?.kind ?? current.kind
-  const displayedTemperature = locationWeather?.temperature ?? current.high
-  const displayedFeelsLike = locationWeather?.feelsLike ?? current.high - 1
-  const displayedHumidity = locationWeather?.humidity ?? 78
-  const displayedWind = locationWeather?.wind ?? 12
+  const greeting = now ? (Number(new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', hour12: false }).format(now)) < 12 ? 'Good morning' : Number(new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', hour12: false }).format(now)) < 18 ? 'Good afternoon' : 'Good evening') : 'Hello'
   const formattedDate = useMemo(() => new Intl.DateTimeFormat('en', { weekday: 'long', month: 'long', day: 'numeric' }).format(sunsetDate), [sunsetDate])
 
   return (
@@ -139,11 +144,11 @@ export function MoodSky() {
         <section className="hero" aria-labelledby="weather-heading">
           <div className="date-label">{formattedDate}</div>
           <div className="hero-cloud"><MoodCloud kind={displayedKind} /></div>
-          <div className="weather-copy"><p className="eyebrow">Good morning, {locationWeather?.name ?? 'Lagos'}</p><h1 id="weather-heading">{displayedTemperature}°</h1><p className="condition">{details.label} <span aria-hidden="true">·</span> Feels like {displayedFeelsLike}°</p><p className="sentence">{details.sentence}</p></div>
+          <div className="weather-copy"><p className="eyebrow">{greeting}, {locationWeather?.name ?? 'Lagos'}</p><h1 id="weather-heading">{displayedTemperature}°</h1><p className="condition">{details.label} <span aria-hidden="true">·</span> Feels like {displayedFeelsLike}°</p><p className="sentence">{details.sentence}</p></div>
           <div className="metrics"><div><Wind size={17} /><span>Wind</span><strong>{displayedWind} km/h</strong></div><div><span className="humidity-dot" /><span>Humidity</span><strong>{displayedHumidity}%</strong></div><div><span className="sunset-dot" /><span>Sunset</span><strong>{sunsetTime}</strong></div></div>
         </section>
 
-        <section className="forecast-section" aria-labelledby="forecast-heading"><div className="section-heading"><div><p className="eyebrow">The week ahead</p><h2 id="forecast-heading">Your sky, at a glance</h2></div><label className="calendar-control"><CalendarDays size={16} aria-hidden="true" /><span>Browse dates</span><input type="date" value={calendarDate} min="2026-08-18" max="2026-09-01" onChange={(event) => changeCalendarDate(event.target.value)} aria-label="Browse weather by date" /></label><div className="arrows"><button aria-label="Previous day" onClick={() => setSelected(Math.max(0, selected - 1))}><ArrowLeft size={17} /></button><button aria-label="Next day" onClick={() => setSelected(Math.min(days.length - 1, selected + 1))}><ArrowRight size={17} /></button></div></div><div className="forecast-strip">{days.map((day, index) => <button key={day.date} className={`day-card ${index === selected ? 'day-card--selected' : ''}`} onClick={() => setSelected(index)} aria-pressed={index === selected}><span className="day-name">{day.day}</span><span className="day-date">{day.date}</span><MoodCloud kind={day.kind} small /><span className="temps"><b>{day.high}°</b><span>{day.low}°</span></span></button>)}</div></section>
+        <section className="forecast-section" aria-labelledby="forecast-heading"><div className="section-heading"><div><p className="eyebrow">The week ahead</p><h2 id="forecast-heading">Your sky, at a glance</h2></div><label className="calendar-control"><CalendarDays size={16} aria-hidden="true" /><span>Browse dates</span><input type="date" value={calendarDate} min="2026-08-18" max="2026-09-01" onChange={(event) => changeCalendarDate(event.target.value)} aria-label="Browse weather by date" /></label><div className="arrows"><button aria-label="Previous day" onClick={() => { const next = Math.max(0, selected - 1); setSelected(next); forecastStripRef.current?.scrollBy({ left: -130, behavior: 'smooth' }) }}><ArrowLeft size={17} /></button><button aria-label="Next day" onClick={() => { const next = Math.min(days.length - 1, selected + 1); setSelected(next); forecastStripRef.current?.scrollBy({ left: 130, behavior: 'smooth' }) }}><ArrowRight size={17} /></button></div></div><div className="forecast-strip" ref={forecastStripRef}>{days.map((day, index) => <button key={day.date} className={`day-card ${index === selected ? 'day-card--selected' : ''}`} onClick={() => setSelected(index)} aria-pressed={index === selected}><span className="day-name">{day.day}</span><span className="day-date">{day.date}</span><MoodCloud kind={day.kind} small /><span className="temps"><b>{day.high}°</b><span>{day.low}°</span></span></button>)}</div></section>
         <footer><span>© Built by Mars</span></footer>
       </div>
     </main>
