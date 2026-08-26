@@ -46,7 +46,7 @@ export function MoodSky() {
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState('')
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false)
-  const [calendarDate, setCalendarDate] = useState('2026-08-25')
+  const [calendarDate, setCalendarDate] = useState('')
   const forecastStripRef = useRef<HTMLDivElement>(null)
   const suggestions = useMemo(() => {
     const value = query.trim().toLowerCase()
@@ -114,7 +114,9 @@ export function MoodSky() {
   }
 
   useEffect(() => {
-    setNow(new Date())
+    const currentDate = new Date()
+    setNow(currentDate)
+    setCalendarDate(currentDate.toISOString().slice(0, 10))
     const timer = window.setInterval(() => setNow(new Date()), 30_000)
     return () => window.clearInterval(timer)
   }, [])
